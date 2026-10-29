@@ -1,0 +1,227 @@
+<!doctype html>
+<html lang="zh-CN" data-theme="ink">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>打卡 · 月历</title>
+    <meta name="description" content="个人打卡与月历,数据只保存在这台设备的浏览器里。" />
+    <meta name="color-scheme" content="light dark" />
+    <meta name="theme-color" content="#FAFAF8" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#14161A" media="(prefers-color-scheme: dark)" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="打卡" />
+    <link rel="manifest" href="./manifest.json" />
+    <link rel="icon" href="./icons/icon-192.png" sizes="192x192" type="image/png" />
+    <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png" />
+
+    <!-- 首屏防闪烁:在样式生效前先确定主题(未手动选择时跟随系统) -->
+    <script>
+      (function () {
+        var VALID = ["ink", "mist", "sand", "matcha", "night"];
+        var t = null;
+        try {
+          var raw = localStorage.getItem("daka_theme");
+          if (raw) {
+            try {
+              t = JSON.parse(raw);
+            } catch (e) {
+              t = raw;
+            }
+          }
+        } catch (e) {}
+        if (VALID.indexOf(t) < 0) {
+          t =
+            window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches
+              ? "night"
+              : "ink";
+        }
+        document.documentElement.setAttribute("data-theme", t);
+      })();
+    </script>
+
+    <link rel="stylesheet" href="./css/style.css" />
+  </head>
+
+  <body>
+    <div class="wrap">
+      <!-- ================= 顶部 ================= -->
+      <header class="app-header">
+        <div class="header-row">
+          <h1 class="brand">打卡</h1>
+
+          <div class="theme-dots" id="themeDots" role="group" aria-label="主题">
+            <button
+              class="theme-dot"
+              type="button"
+              data-theme="ink"
+              aria-label="极简墨白"
+              aria-pressed="false"
+              style="--dot: #FAFAF8; --dot-ring: #111111"
+            >
+              <span></span>
+            </button>
+            <button
+              class="theme-dot"
+              type="button"
+              data-theme="mist"
+              aria-label="雾蓝"
+              aria-pressed="false"
+              style="--dot: #F5F7FA; --dot-ring: #3E6B8F"
+            >
+              <span></span>
+            </button>
+            <button
+              class="theme-dot"
+              type="button"
+              data-theme="sand"
+              aria-label="暖砂"
+              aria-pressed="false"
+              style="--dot: #FBF7F1; --dot-ring: #B5713F"
+            >
+              <span></span>
+            </button>
+            <button
+              class="theme-dot"
+              type="button"
+              data-theme="matcha"
+              aria-label="抹茶"
+              aria-pressed="false"
+              style="--dot: #F4F7F2; --dot-ring: #5F8A5B"
+            >
+              <span></span>
+            </button>
+            <button
+              class="theme-dot"
+              type="button"
+              data-theme="night"
+              aria-label="夜间"
+              aria-pressed="false"
+              style="--dot: #14161A; --dot-ring: #8FB8DE"
+            >
+              <span></span>
+            </button>
+          </div>
+        </div>
+        <p class="brand-sub" id="todayLabel">—</p>
+      </header>
+
+      <!-- ================= ① 打卡项 ================= -->
+      <section class="section" aria-labelledby="secItems">
+        <div class="section-head">
+          <h2 class="section-title" id="secItems">今天</h2>
+          <button class="text-btn" type="button" id="editToggle" aria-pressed="false">
+            编辑
+          </button>
+        </div>
+
+        <div class="chips" id="chips"></div>
+
+        <p class="empty" id="itemsEmpty" hidden>还没有打卡项,点「编辑」添加一个</p>
+
+        <button class="add-btn" type="button" id="addItem" hidden>＋ 新增打卡项</button>
+
+        <div class="editor" id="itemEditor" hidden></div>
+      </section>
+
+      <!-- ================= ② 月历 ================= -->
+      <section class="section" aria-labelledby="secCal">
+        <div class="section-head">
+          <h2 class="section-title" id="secCal">月历</h2>
+        </div>
+
+        <div class="cal-head">
+          <div class="cal-nav">
+            <button class="nav-btn" type="button" id="prevMonth" aria-label="上个月">
+              <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
+                <path
+                  d="M15 5l-7 7 7 7"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.6"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+              </svg>
+            </button>
+            <div class="cal-title" id="calTitle">—</div>
+            <button class="nav-btn" type="button" id="nextMonth" aria-label="下个月">
+              <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
+                <path
+                  d="M9 5l7 7-7 7"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.6"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+              </svg>
+            </button>
+          </div>
+          <button class="text-btn" type="button" id="goToday">今天</button>
+        </div>
+
+        <div class="weekdays" aria-hidden="true">
+          <span>一</span><span>二</span><span>三</span><span>四</span
+          ><span>五</span><span>六</span><span>日</span>
+        </div>
+
+        <div class="cal-grid" id="calGrid"></div>
+
+        <!-- 历史日期就地展开 -->
+        <div class="day-panel" id="dayPanel" hidden></div>
+      </section>
+
+      <!-- ================= ③ 统计 + 热力图 ================= -->
+      <section class="section" aria-labelledby="secStats">
+        <div class="section-head">
+          <h2 class="section-title" id="secStats">统计</h2>
+          <span class="section-hint">最近 84 天</span>
+        </div>
+
+        <div class="stats">
+          <div class="stat">
+            <div class="stat-value" id="statStreak">0<span class="stat-unit">天</span></div>
+            <div class="stat-label">当前连续</div>
+          </div>
+          <div class="stat">
+            <div class="stat-value" id="statBest">0<span class="stat-unit">天</span></div>
+            <div class="stat-label">历史最长</div>
+          </div>
+          <div class="stat">
+            <div class="stat-value" id="statRate">—</div>
+            <div class="stat-label" id="statRateLabel">本月完成率</div>
+          </div>
+        </div>
+
+        <div class="heatmap" id="heatmap" role="img" aria-label="最近 84 天打卡热力图"></div>
+
+        <div class="heat-legend" aria-hidden="true">
+          <span>少</span>
+          <span class="swatch"></span>
+          <span class="swatch" style="--v: 0.3"></span>
+          <span class="swatch" style="--v: 0.55"></span>
+          <span class="swatch" style="--v: 0.85"></span>
+          <span>多</span>
+        </div>
+      </section>
+
+      <!-- ================= 页脚 ================= -->
+      <footer class="foot">
+        <div class="foot-actions">
+          <button class="text-btn" type="button" id="exportBtn">导出 JSON</button>
+          <button class="text-btn" type="button" id="importBtn">导入 JSON</button>
+        </div>
+        <span class="foot-note">数据仅保存在本机 · v1.0</span>
+      </footer>
+    </div>
+
+    <input type="file" id="importFile" accept="application/json,.json" hidden />
+
+    <div class="toast" id="toast" role="status" aria-live="polite" hidden>
+      <span class="toast-text" id="toastText"></span>
+      <button class="toast-undo" type="button" id="toastUndo">撤销</button>
+    </div>
+
+    <script type="module" src="./js/main.js"></script>
+  </body>
+</html>
